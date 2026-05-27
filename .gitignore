@@ -1,1 +1,8 @@
 *Zone.Identifier
+.venv
+UPLIFT/datasets/*.data
+UPLIFT/datasets/*.csv
+UPLIFT/datasets/*.zip
+UPLIFT/datasets/criteo_day21_10M
+UPLIFT/datasets/*.txt
+*.out

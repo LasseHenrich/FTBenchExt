@@ -85,7 +85,7 @@ fi
 # AMiner citation dataset
 if [ "$1" = "T10" -o "$1" = "T11" ]; then
   rm AminerCitation_small.txt
-  wget wget https://lfs.aminer.cn/lab-datasets/citation/citation-network1.zip
+  wget https://lfs.aminer.cn/lab-datasets/citation/citation-network1.zip
   unzip -p citation-network1.zip > AminerCitation_small.txt
   if [ "$1" = "T10" ]; then
     rm AminerAbstract.csv
