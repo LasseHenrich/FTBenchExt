@@ -9,3 +9,4 @@ dask==2023.5.0
 dask-ml==2023.3.24
 tensorflow==2.8.0
 protobuf==3.20.1
+polars==1.32.3

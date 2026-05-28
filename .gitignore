@@ -6,3 +6,5 @@ UPLIFT/datasets/*.zip
 UPLIFT/datasets/criteo_day21_10M
 UPLIFT/datasets/*.txt
 *.out
+__pycache__
+*.dat

@@ -24,10 +24,12 @@ Then do the rest everything as mentioned in UPLIFT/README.md.
 
 # Plan / Doing
 - [x] Initial call
-- [ ] Create and set up repo with current transformations and libraries
-- [ ] Analyze current implementations
-- [ ] Plan what implementations to add
-- [ ] ...
+- [x] Create and set up repo with current transformations and libraries
+- [x] Analyze current implementations
+- [x] Plan what implementations to add
+- [ ] Learn about Polars
+- [ ] Set up Polars
+- [ ] T1: Polars
 
 
 ## Current implementations
