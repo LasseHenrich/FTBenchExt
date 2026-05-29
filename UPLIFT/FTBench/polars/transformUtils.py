@@ -50,10 +50,44 @@ def getTransformSpec(X, filename):
     pt = list(set(range(0,len(X.columns))) - set(catCols + bins))
     return {'rc':rc, 'dc':dc, 'fh':fh, 'bins':bins, 'method':equiWidth, 'numbin':binCount, 'cat':catCols, 'pt':pt}
 
-def buildMathExpressions(X, encoders):
-    pass
+def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
+    expr_list = []
+    
+    # Passthrough (convert to float)
+    if 'pt' in encoders:
+        for idx in encoders['pt']:
+            col_name = X.columns[idx]
+            expr = pl.col(col_name).cast(pl.Float64)
+            expr_list.append(expr)
+    
+    # TODO: scale if transform was called with scale=True
+    
+    # Binning
+    if 'bins' in encoders:
+        nbins = encoders['numbin']
+        print(nbins)
+        for idx in encoders['bins']:
+            col_name = X.columns[idx]
+            # TODO: the cast in scikit-learn/transformUtils.py (line 80) currently happens BEFORE starting the timers
+            expr = pl.col(col_name).cast(pl.Float64)
+            if encoders['method']: # uniform/equi-width
+                expr = expr # TODO: each bin must have the same width, regardless of number of elements
+            else: # quantile
+                expr = expr.qcut(nbins) # equal number of elements per bin
+            expr_list.append(expr)
+            
+    # Recoding (ordinal encoding)
+    if 'rc' in encoders:
+        for idx in encoders['rc']:
+            col_name = X.columns[idx]
+            # strings to categorical, then to integer representation
+            expr = pl.col(col_name).cast(pl.Categorical).to_physical()
+            expr_list.append(expr)
+            
+    return expr_list
+    
 
-def transform(X: pl.LazyFrame, specfile, resultfile): # todo: scale, save
+def transform(X: pl.LazyFrame, specfile, resultfile): # TODO: scale, save
     """
     Execution phases:
     1. 1-to-1 math expressions: Build an expression list of 1-to-1 math expressions

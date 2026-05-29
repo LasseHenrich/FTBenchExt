@@ -3,6 +3,8 @@ import time
 import numpy as np
 import warnings
 
+from transformUtils import transform
+
 # Make numpy values easier to read.
 np.set_printoptions(precision=3, suppress=True)
 warnings.filterwarnings('ignore') #cleaner, but not recommended
@@ -21,3 +23,4 @@ def readNprep():
     return adult
     
 X = readNprep()
+X_prep = transform(X, "adult_spec2.json", "adult_pl.dat")
