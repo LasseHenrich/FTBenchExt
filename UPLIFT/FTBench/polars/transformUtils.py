@@ -1,4 +1,7 @@
+import time
+
 import polars as pl
+import numpy as np
 import json
 
 
@@ -47,9 +50,44 @@ def getTransformSpec(X, filename):
     pt = list(set(range(0,len(X.columns))) - set(catCols + bins))
     return {'rc':rc, 'dc':dc, 'fh':fh, 'bins':bins, 'method':equiWidth, 'numbin':binCount, 'cat':catCols, 'pt':pt}
 
-
-def transform(X, specfile, resultfile): # todo: scale, save
-    encoders = getTransformSpec(X, specfile)
-    timers = pl.zeros(3)
-    
+def buildMathExpressions(X, encoders):
     pass
+
+def transform(X: pl.LazyFrame, specfile, resultfile): # todo: scale, save
+    """
+    Execution phases:
+    1. 1-to-1 math expressions: Build an expression list of 1-to-1 math expressions
+    (binning, scaling, ...), which is then stacked via .with_columns().
+    2. collection: By calling .collect(), polars can "lazily" execute the expression list.
+    That means, polars first builds an AST and then finds shortcuts before running.
+    3. dummy coding: dc is eager and cannot be handled in the lazy phase, as it alters
+    the number of columns ~> We have to handle that separately.
+    """
+    
+    encoders = getTransformSpec(X, specfile)
+    timers = np.zeros(3)
+    
+    # phase 1.1
+    expr_list = buildMathExpressions(X, encoders)
+    
+    for i in range(3):
+        t1 = time.time()
+        
+        # phase 1.2
+        transformed = X.with_columns(expr_list)
+        
+        # phase 2
+        transformed = transformed.collect()
+        
+        # phase 3
+        if encoders['dc']:
+            dc_col_names = [X.columns[idx] for idx in encoders['dc']]
+            transformed = transformed.to_dummies(columns=dc_col_names)
+            
+        timers[i] = timers[i] + ((time.time() - t1) * 1000) #millisec
+        
+    print("Elapsed time for transformations in millsec")
+    print(timers)
+    np.savetxt(resultfile, timers, delimiter="\t", fmt='%f')
+    
+    return transformed
