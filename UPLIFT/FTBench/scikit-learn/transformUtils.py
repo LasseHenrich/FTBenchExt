@@ -109,6 +109,7 @@ def transformFUnion(X, specfile, resultfile, scale=False, save=True):
         nbins = encoders['numbin']
         bin_en = preprocessing.KBinsDiscretizer(n_bins=nbins, strategy=strategy, encode=postBin)
         num_pipe.steps.append(['biner', bin_en])
+        # [Lasse] TODO: Is this a bug? The KBinsDiscretizer is applied to EVERY numeric column that reaches it, so including pt columns 
 
     print(num_pipe)
 
@@ -125,6 +126,8 @@ def transformFUnion(X, specfile, resultfile, scale=False, save=True):
     ])
     # Below code assums all cat cols are for RC or DC
     # TODO: support mixed encoders
+    # [Lasse] TODO: Yes this seems like a bug to me, since if ANY dc column exists, EVERY cat column (including pure rc ones) get one-hot encoded.
+    # Note however that there is no "rc-only" column at the moment, so this issue doesn't manifest right now.
     if isDC:
         one_hot = preprocessing.OneHotEncoder()
         cat_pipe.steps.append(['onehot', one_hot])
@@ -132,7 +135,6 @@ def transformFUnion(X, specfile, resultfile, scale=False, save=True):
         recode = preprocessing.OrdinalEncoder()
         cat_pipe.steps.append(['recode', recode])
 
-    # [Lasse] TODO: This was already called at the top, why here again?
     if scale:
         norm = preprocessing.StandardScaler(with_mean=False)
         cat_pipe.steps.append(['normalize', norm])
