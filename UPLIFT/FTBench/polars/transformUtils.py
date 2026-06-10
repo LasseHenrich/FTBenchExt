@@ -57,7 +57,8 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
     if 'pt' in encoders:
         for idx in encoders['pt']:
             col_name = X.columns[idx]
-            expr = pl.col(col_name).cast(pl.Float64)
+            # strip_chars as the numbers are e.g. " 9", " 13", etc.
+            expr = pl.col(col_name).str.strip_chars().cast(pl.Float64)
             expr_list.append(expr)
     
     # TODO: scale if transform was called with scale=True
@@ -69,11 +70,13 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
         for idx in encoders['bins']:
             col_name = X.columns[idx]
             # TODO: the cast in scikit-learn/transformUtils.py (line 80) currently happens BEFORE starting the timers
-            expr = pl.col(col_name).cast(pl.Float64)
+            expr = pl.col(col_name).str.strip_chars().cast(pl.Float64)
             if encoders['method']: # uniform/equi-width
-                expr = expr # TODO: each bin must have the same width, regardless of number of elements
+                # TODO: each bin must have the same width, regardless of number of elements
+                expr = expr
             else: # quantile
-                expr = expr.qcut(nbins) # equal number of elements per bin
+                # equal number of elements per bin
+                expr = expr.qcut(nbins)
             expr_list.append(expr)
             
     # Recoding (ordinal encoding)

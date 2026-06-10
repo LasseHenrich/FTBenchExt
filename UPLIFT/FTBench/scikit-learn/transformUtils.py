@@ -132,6 +132,7 @@ def transformFUnion(X, specfile, resultfile, scale=False, save=True):
         recode = preprocessing.OrdinalEncoder()
         cat_pipe.steps.append(['recode', recode])
 
+    # [Lasse] TODO: This was already called at the top, why here again?
     if scale:
         norm = preprocessing.StandardScaler(with_mean=False)
         cat_pipe.steps.append(['normalize', norm])
