@@ -70,14 +70,23 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
         for idx in encoders['bins']:
             col_name = X.columns[idx]
             # TODO: the cast in scikit-learn/transformUtils.py (line 80) currently happens BEFORE starting the timers
-            expr = pl.col(col_name).str.strip_chars().cast(pl.Float64)
+            orig_expr = pl.col(col_name).str.strip_chars().cast(pl.Float64)
             if encoders['method']: # uniform/equi-width
-                # TODO: each bin must have the same width, regardless of number of elements
-                expr = expr
+                min_val = orig_expr.min()
+                max_val = orig_expr.max()
+                norm_expr = (orig_expr - min_val) / (max_val - min_val) # [0, 1]
+                
+                bin_idx = (norm_expr * nbins).floor().cast(pl.Int64)
+                
+                # note that the following produces an expression wiht the deraulf name
+                # "literal", and e.g. with 5 binned columns in adult_spec2.json, all 5 expressions
+                # colided on that name, causing "the name 'literal' passed to LazyFrame.with_columns is duplicate".
+                # Fixed by aliasing each binning expression back to its source column name.
+                expr = pl.when(bin_idx >= nbins).then(nbins-1).otherwise(bin_idx)
             else: # quantile
                 # equal number of elements per bin
-                expr = expr.qcut(nbins)
-            expr_list.append(expr)
+                expr = orig_expr.qcut(nbins).cast(pl.Categorical).to_physical()
+            expr_list.append(expr.alias(col_name))
             
     # Recoding (ordinal encoding)
     if 'rc' in encoders:
