@@ -89,14 +89,17 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict, scale: bool = False):
             expr_list.append(expr.alias(col_name))
             
     # Recoding (ordinal encoding)
-    if 'rc' in encoders:
+    if encoders['rc']:
         for idx in encoders['rc']:
             col_name = X.columns[idx]
             # strings to categorical, then to integer representation
             expr = pl.col(col_name).cast(pl.Categorical).to_physical()
             expr_list.append(expr)
             
-    # TODO: feature hashing (also not supported in scikit-learn implementation)
+    # TODO: feature hashing (also not supported in scikit-learn implementation, so we won't implement it)
+    
+    # note that in contrast to the sklearn implementation, we (correctly) apply
+    # ordinal encoding to rc columns to to_dummies to dc columns independently
     
     return expr_list
     
