@@ -96,10 +96,12 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
             expr = pl.col(col_name).cast(pl.Categorical).to_physical()
             expr_list.append(expr)
             
+    # TODO: feature hashing (also not supported in scikit-learn implementation)
+    
     return expr_list
     
 
-def transform(X: pl.LazyFrame, specfile, resultfile): # TODO: scale, save
+def transform(X: pl.LazyFrame, specfile, resultfile, save=True): # TODO: scale
     """
     Execution phases:
     1. 1-to-1 math expressions: Build an expression list of 1-to-1 math expressions
@@ -108,32 +110,44 @@ def transform(X: pl.LazyFrame, specfile, resultfile): # TODO: scale, save
     That means, polars first builds an AST and then finds shortcuts before running.
     3. dummy coding: dc is eager and cannot be handled in the lazy phase, as it alters
     the number of columns ~> We have to handle that separately.
+
+    Analogous to sk-learn implementation: If save is True, the transform is run 3 times and the per-run timings are
+    written to resultfile. If False, the transform is run once and the elapsed
+    time is printed without writing resultfile.
     """
-    
+
     encoders = getTransformSpec(X, specfile)
-    timers = np.zeros(3)
-    
+
     # phase 1.1
     expr_list = buildMathExpressions(X, encoders)
-    
-    for i in range(3):
-        t1 = time.time()
-        
+
+    def run_once():
         # phase 1.2
         transformed = X.with_columns(expr_list)
-        
+
         # phase 2
         transformed = transformed.collect()
-        
+
         # phase 3
         if encoders['dc']:
             dc_col_names = [X.columns[idx] for idx in encoders['dc']]
             transformed = transformed.to_dummies(columns=dc_col_names)
-            
-        timers[i] = timers[i] + ((time.time() - t1) * 1000) #millisec
-        
-    print("Elapsed time for transformations in millsec")
-    print(timers)
-    np.savetxt(resultfile, timers, delimiter="\t", fmt='%f')
-    
+
+        return transformed
+
+    if save:
+        timers = np.zeros(3)
+        for i in range(3):
+            t1 = time.time()
+            transformed = run_once()
+            timers[i] = timers[i] + ((time.time() - t1) * 1000) # millisec
+
+        print("Elapsed time for transformations in millsec")
+        print(timers)
+        np.savetxt(resultfile, timers, delimiter="\t", fmt='%f')
+    else:
+        t1 = time.time()
+        transformed = run_once()
+        print("Elapsed time for Transform = %s sec" % (time.time() - t1))
+
     return transformed
