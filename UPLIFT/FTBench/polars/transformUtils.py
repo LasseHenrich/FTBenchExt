@@ -50,23 +50,24 @@ def getTransformSpec(X, filename):
     pt = list(set(range(0,len(X.columns))) - set(catCols + bins))
     return {'rc':rc, 'dc':dc, 'fh':fh, 'bins':bins, 'method':equiWidth, 'numbin':binCount, 'cat':catCols, 'pt':pt}
 
-def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
+def buildMathExpressions(X: pl.LazyFrame, encoders: dict, scale: bool = False):
     expr_list = []
-    
+
     # Passthrough (convert to float)
     if 'pt' in encoders:
         for idx in encoders['pt']:
             col_name = X.columns[idx]
             # strip_chars as the numbers are e.g. " 9", " 13", etc.
             expr = pl.col(col_name).str.strip_chars().cast(pl.Float64)
-            expr_list.append(expr)
-    
-    # TODO: scale if transform was called with scale=True
-    
+            if scale:
+                # standardize: (x - mean) / std, using population std (ddof=0)
+                # to match sklearn's StandardScaler
+                expr = (expr - expr.mean()) / expr.std(ddof=0)
+            expr_list.append(expr.alias(col_name))
+
     # Binning
     if 'bins' in encoders:
         nbins = encoders['numbin']
-        print(nbins)
         for idx in encoders['bins']:
             col_name = X.columns[idx]
             # TODO: the cast in scikit-learn/transformUtils.py (line 80) currently happens BEFORE starting the timers
@@ -75,7 +76,6 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
                 min_val = orig_expr.min()
                 max_val = orig_expr.max()
                 norm_expr = (orig_expr - min_val) / (max_val - min_val) # [0, 1]
-                
                 bin_idx = (norm_expr * nbins).floor().cast(pl.Int64)
                 
                 # note that the following produces an expression wiht the deraulf name
@@ -101,7 +101,7 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict):
     return expr_list
     
 
-def transform(X: pl.LazyFrame, specfile, resultfile, save=True): # TODO: scale
+def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
     """
     Execution phases:
     1. 1-to-1 math expressions: Build an expression list of 1-to-1 math expressions
@@ -114,12 +114,15 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True): # TODO: scale
     Analogous to sk-learn implementation: If save is True, the transform is run 3 times and the per-run timings are
     written to resultfile. If False, the transform is run once and the elapsed
     time is printed without writing resultfile.
+
+    If scale is True, passthrough columns are standardized (zero mean, unit
+    variance), matching sklearn's StandardScaler.
     """
 
     encoders = getTransformSpec(X, specfile)
 
     # phase 1.1
-    expr_list = buildMathExpressions(X, encoders)
+    expr_list = buildMathExpressions(X, encoders, scale=scale)
 
     def run_once():
         # phase 1.2
