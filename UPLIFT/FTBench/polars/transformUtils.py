@@ -113,13 +113,19 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
     That means, polars first builds an AST and then finds shortcuts before running.
     3. dummy coding: dc is eager and cannot be handled in the lazy phase, as it alters
     the number of columns ~> We have to handle that separately.
+    4. scaling of recode/dummycode output: also eager, since it depends on the
+    columns produced by phase 3.
 
     Analogous to sk-learn implementation: If save is True, the transform is run 3 times and the per-run timings are
     written to resultfile. If False, the transform is run once and the elapsed
     time is printed without writing resultfile.
 
-    If scale is True, passthrough columns are standardized (zero mean, unit
-    variance), matching sklearn's StandardScaler.
+    If scale is True:
+    - passthrough columns are standardized (zero mean, unit variance), matching
+      sklearn's StandardScaler.
+    - recode/dummycode output columns (excluding binned columns) are scaled to
+      unit variance without centering, matching sklearn's
+      StandardScaler(with_mean=False).
     """
 
     encoders = getTransformSpec(X, specfile)
@@ -128,6 +134,16 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
     expr_list = buildMathExpressions(X, encoders, scale=scale)
     
     X = X.collect().lazy() # read CSV already, not three times in the loop
+
+    # rc/dc columns that are also binned are excluded from scaling, matching
+    # sklearn (their encoded output comes from KBinsDiscretizer, not from the
+    # cat_pipe encoder that gets StandardScaler(with_mean=False)). rc columns
+    # that are also dc columns get exploded by to_dummies and are scaled via
+    # dc_scale_cols instead (their original column name no longer exists).
+    bin_set = set(encoders['bins'])
+    dc_set = set(encoders['dc'] or [])
+    rc_scale_cols = [X.columns[idx] for idx in (set(encoders['rc'] or []) - bin_set - dc_set)]
+    nonbin_dc_names = [X.columns[idx] for idx in dc_set if idx not in bin_set]
     
     def run_once():
         # phase 1.2
@@ -137,9 +153,23 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
         transformed = transformed.collect()
 
         # phase 3
+        dc_scale_cols = []
         if encoders['dc']:
             dc_col_names = [X.columns[idx] for idx in encoders['dc']]
             transformed = transformed.to_dummies(columns=dc_col_names)
+            dc_scale_cols = [c for c in transformed.columns
+                             if any(c.startswith(f"{n}_") for n in nonbin_dc_names)]
+
+        # phase 4
+        if scale:
+            scale_cols = rc_scale_cols + dc_scale_cols
+            if scale_cols:
+                transformed = transformed.with_columns([
+                    (pl.col(c) / pl.when(pl.col(c).std(ddof=0) == 0)
+                                    .then(1.0)
+                                    .otherwise(pl.col(c).std(ddof=0))).alias(c)
+                    for c in scale_cols
+                ])
 
         return transformed
 

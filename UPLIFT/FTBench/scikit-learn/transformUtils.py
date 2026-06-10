@@ -126,7 +126,7 @@ def transformFUnion(X, specfile, resultfile, scale=False, save=True):
     ])
     # Below code assums all cat cols are for RC or DC
     # TODO: support mixed encoders
-    # [Lasse] TODO: Yes this seems like a bug to me, since if ANY dc column exists, EVERY cat column (including pure rc ones) get one-hot encoded.
+    # [Lasse] TODO: Yes this seems like a bug to me, since if ANY dc column exists, EVERY cat column (including pure rc ones) gets one-hot encoded.
     # Note however that there is no "rc-only" column at the moment, so this issue doesn't manifest right now.
     if isDC:
         one_hot = preprocessing.OneHotEncoder()
