@@ -123,7 +123,9 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
 
     # phase 1.1
     expr_list = buildMathExpressions(X, encoders, scale=scale)
-
+    
+    X = X.collect().lazy() # read CSV already, not three times in the loop
+    
     def run_once():
         # phase 1.2
         transformed = X.with_columns(expr_list)
