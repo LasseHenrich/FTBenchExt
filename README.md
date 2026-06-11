@@ -1,6 +1,7 @@
 # Current Short-Term Notes
-I am unable to initialize the dataset for T11, as it is so big (>6GB) that my VM crashes when running wiki_prep.py.
-I am also unable to initialize the dataset for T15, as I need to download it manually, but the WeTransfer link is outdated.
+1. I am unable to initialize the dataset for T11, as it is so big (>6GB) that my VM crashes when running wiki_prep.py.
+1. I am also unable to initialize the dataset for T15, as I need to download it manually, but the WeTransfer link is outdated.
+1. T2 is impossible for me to test, because my VM crashes when running the sklearn implementation.
 
 # General
 
@@ -27,9 +28,10 @@ Then do the rest everything as mentioned in UPLIFT/README.md.
 - [x] Create and set up repo with current transformations and libraries
 - [x] Analyze current implementations
 - [x] Plan what implementations to add
-- [ ] Learn about Polars
-- [ ] Set up Polars
-- [ ] T1: Polars
+- [x] Learn about Polars
+- [x] Set up Polars
+- [x] Polars transformUtils.py
+- [x] T1: Polars
 
 
 ## Current implementations
