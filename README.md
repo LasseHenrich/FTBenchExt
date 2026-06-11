@@ -1,7 +1,8 @@
 # Current Short-Term Notes
 1. I am unable to initialize the dataset for T11, as it is so big (>6GB) that my VM crashes when running wiki_prep.py.
-1. I am also unable to initialize the dataset for T15, as I need to download it manually, but the WeTransfer link is outdated.
+1. I am also unable to initialize the dataset for T3/T4/T15 (criteo), as I need to download it manually, but the WeTransfer link is outdated.
 1. T2 is impossible for me to test, because my VM crashes when running the sklearn implementation.
+1. sklearn applies KBinsDiscretizer to ALL numeric columns, not just bins, resulting in overhead.
 
 # General
 
@@ -31,7 +32,9 @@ Then do the rest everything as mentioned in UPLIFT/README.md.
 - [x] Learn about Polars
 - [x] Set up Polars
 - [x] Polars transformUtils.py
-- [x] T1: Polars
+- [x] T1 Polars
+- [x] T2 Polars (untested)
+- [x] T3/4 Polars (untested)
 
 
 ## Current implementations

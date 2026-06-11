@@ -1,6 +1,5 @@
 import os
 import polars as pl
-import time
 import numpy as np
 import warnings
 
