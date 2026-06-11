@@ -1,13 +1,16 @@
+import os
 import time
 
 import polars as pl
 import numpy as np
 import json
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def getTransformSpec(X, filename):
     # Deserialize the transform spec
-    fullfile = "../systemds/specs/" + filename
+    fullfile = os.path.join(SCRIPT_DIR, "../systemds/specs/" + filename)
     specFile = open(fullfile, "r")
     spec = json.loads(specFile.read())
 
