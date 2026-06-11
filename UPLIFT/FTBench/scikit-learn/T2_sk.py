@@ -1,3 +1,5 @@
+# [Lasse] Note: Couldn't test yet, keeps crashing WSL, probably out of memory
+
 import sys
 import time
 import numpy as np
