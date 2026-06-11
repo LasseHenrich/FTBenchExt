@@ -35,6 +35,7 @@ Then do the rest everything as mentioned in UPLIFT/README.md.
 - [x] T1 Polars
 - [x] T2 Polars (untested)
 - [x] T3/4 Polars (untested)
+- [x] T5 Polars
 
 
 ## Current implementations
