@@ -102,7 +102,7 @@ def buildMathExpressions(X: pl.LazyFrame, encoders: dict, scale: bool = False):
     # TODO: feature hashing (also not supported in scikit-learn implementation, so we won't implement it)
     
     # note that in contrast to the sklearn implementation, we (correctly) apply
-    # ordinal encoding to rc columns to to_dummies to dc columns independently
+    # ordinal encoding to rc columns and to_dummies to dc columns independently
     
     return expr_list
     
@@ -145,7 +145,11 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
     # dc_scale_cols instead (their original column name no longer exists).
     bin_set = set(encoders['bins'])
     dc_set = set(encoders['dc'] or [])
+    
+    # 
     rc_scale_cols = [X.columns[idx] for idx in (set(encoders['rc'] or []) - bin_set - dc_set)]
+    
+    # used to construct dc_scale_cols (source column in dc but not in bins)
     nonbin_dc_names = [X.columns[idx] for idx in dc_set if idx not in bin_set]
     
     def run_once():
@@ -156,7 +160,7 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
         transformed = transformed.collect()
 
         # phase 3
-        dc_scale_cols = []
+        dc_scale_cols = [] # source column in dc but not in bins
         if encoders['dc']:
             dc_col_names = [X.columns[idx] for idx in encoders['dc']]
             transformed = transformed.to_dummies(columns=dc_col_names)
