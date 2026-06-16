@@ -2,7 +2,8 @@
 1. I am unable to initialize the dataset for T11, as it is so big (>6GB) that my VM crashes when running wiki_prep.py.
 1. I am also unable to initialize the dataset for T3/T4/T15 (criteo), as I need to download it manually, but the WeTransfer link is outdated.
 1. T2 is impossible for me to test, because my VM crashes when running the sklearn implementation.
-1. sklearn applies KBinsDiscretizer to ALL numeric columns, not just bins, resulting in overhead.
+
+Problems that I have with sklearn/polars are documented in [polars-sklearn_open-problems.md](polars-sklearn_open-problems.md)
 
 # General
 

@@ -146,7 +146,8 @@ def transform(X: pl.LazyFrame, specfile, resultfile, save=True, scale=False):
     bin_set = set(encoders['bins'])
     dc_set = set(encoders['dc'] or [])
     
-    # 
+    # rc cols that are neither in bins nor dc.
+    # Note that this is empty in practice since rc is a subset of dc for all specs at the moment
     rc_scale_cols = [X.columns[idx] for idx in (set(encoders['rc'] or []) - bin_set - dc_set)]
     
     # used to construct dc_scale_cols (source column in dc but not in bins)

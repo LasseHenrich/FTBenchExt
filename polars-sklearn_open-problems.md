@@ -1,6 +1,6 @@
 # Polars vs. scikit-learn `transformUtils`: open problems
 
-Short comparison of my [polars/transformUtils.py](transformUtils.py) against the reference [scikit-learn/transformUtils.py](../scikit-learn/transformUtils.py), with a focus on (a) whether the two implementations perform the *same transformations* and (b) whether their timed sections measure the *same work*, so that runtimes are comparable. Findings are mostly based on `T1_*` (adult, `adult_spec2.json`), plus a review of all specs in `systemds/specs/`.
+Short comparison of my [polars/transformUtils.py](UPLIFT/FTBench/polars/transformUtils.py) against the reference [scikit-learn/transformUtils.py](UPLIFT/FTBench/scikit-learn/transformUtils.py), with a focus on (a) whether the two implementations perform the *same transformations* and (b) whether their timed sections measure the *same work*, so that runtimes are comparable. Findings are mostly based on `T1_*` (adult, `adult_spec2.json`), plus a review of all specs in `systemds/specs/`.
 
 ## 1. KBinsDiscretizer is applied to *all* numeric columns, not just `encoders['bins']`
 
